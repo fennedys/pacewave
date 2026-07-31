@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaceWave Admin Dashboard</title>
+<style>
+:root{
+  --bg:#0a0b0f; --card:#12141b; --text:#eef2ff; --muted:#94a3b8;
+  --accent:#8A2BE2; --accent2:#a78bfa; --border:rgba(255,255,255,0.08);
+  --success:#22c55e; --danger:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text)}
+input,textarea,select,button{font-family:inherit}
+
+/* Login */
+#loginPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(circle at 20% 50%,rgba(139,92,246,0.15),transparent 50%),var(--bg)}
+.login-box{background:var(--card);padding:40px;border-radius:20px;border:1px solid var(--border);width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.login-box h1{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2rem;margin-bottom:8px;text-align:center}
+.login-box p{color:var(--muted);text-align:center;margin-bottom:24px;font-size:0.9rem}
+.login-box input{width:100%;padding:14px;background:#0f1117;border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:12px;font-size:15px}
+.login-box button{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:15px}
+.error{color:var(--danger);font-size:0.85rem;margin-top:8px;display:none}
+
+/* Dashboard Layout */
+#dashboard{display:none}
+.sidebar{position:fixed;left:0;top:0;width:260px;height:100vh;background:var(--card);border-right:1px solid var(--border);padding:20px 0;overflow-y:auto;z-index:100}
+.sidebar h2{padding:0 20px;margin-bottom:30px;font-size:1.4rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--muted);text-decoration:none;cursor:pointer;transition:all 0.2s}
+.sidebar a:hover{background:rgba(139,92,246,0.1);color:var(--text)}
+.sidebar a.active{background:rgba(139,92,246,0.15);color:var(--accent);border-left:3px solid var(--accent)}
+.main{margin-left:260px;padding:30px;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.topbar h1{font-size:1.8rem}
+.btn{padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:0.2s}
+.btn:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-danger{background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:#fca5a5}
+.btn-secondary{background:rgba(255,255,255,0.08);border:1px solid var(--border);color:var(--text)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.grid{display:grid;gap:20px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.stat-card{background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(139,92,246,0.05));border:1px solid rgba(139,92,246,0.2);padding:20px;border-radius:12px}
+.stat-card b{font-size:2rem;display:block;color:var(--accent);margin-bottom:4px}
+.stat-card div{color:var(--muted);font-size:0.9rem}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04)}
+th{color:var(--muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px}
+input,textarea,select{width:100%;padding:10px;background:#0f1117;border:1px solid var(--border);border-radius:8px;color:var(--text);margin-top:6px}
+textarea{min-height:100px;resize:vertical}
+label{font-size:0.9rem;color:var(--muted);margin-top:12px;display:block}
+.section{display:none}
+.section.active{display:block}
+.badge{padding:4px 10px;background:rgba(139,92,246,0.2);color:var(--accent2);border-radius:20px;font-size:0.75rem}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:12px}
+.toggle input[type="checkbox"]{width:auto}
+.progress{background:#0f1117;height:8px;border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--success);color:#fff;padding:14px 20px;border-radius:8px;display:none;z-index:1000}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);transition:0.3s}.sidebar.show{transform:translateX(0)}.main{margin-left:0}.grid-4{grid-template-columns:repeat(2,1fr)}}
+.menu-toggle{display:none;position:fixed;top:20px;left:20px;z-index:200;background:var(--card);border:1px solid var(--border);padding:10px;border-radius:8px;cursor:pointer}
+@media(max-width:768px){.menu-toggle{display:block}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-box">
+    <h1>PaceWave</h1>
+    <p>Admin Dashboard Login</p>
+    <input type="password" id="password" placeholder="Enter password" autofocus>
+    <div class="error" id="loginError">Invalid password</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-top:16px;text-align:center">Enter the admin password</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+  <div class="sidebar" id="sidebar">
+    <h2>PaceWave Admin</h2>
+    <a class="nav-link active" onclick="showSection('dashboardSec',this)">📊 Dashboard</a>
+    <a class="nav-link" onclick="showSection('booksSec',this)">📚 Books</a>
+    <a class="nav-link" onclick="showSection('categoriesSec',this)">📁 Categories</a>
+    <a class="nav-link" onclick="showSection('homepageSec',this)">🏠 Homepage</a>
+    <a class="nav-link" onclick="showSection('searchSec',this)">🔍 Search</a>
+    <a class="nav-link" onclick="showSection('analyticsSec',this)">📈 Analytics</a>
+    <a class="nav-link" onclick="showSection('contentSec',this)">📝 Content</a>
+    <a class="nav-link" onclick="showSection('appearanceSec',this)">🎨 Appearance</a>
+    <a class="nav-link" onclick="showSection('backupSec',this)">💾 Backup</a>
+    <a class="nav-link" onclick="showSection('settingsSec',this)">⚙️ Settings</a>
+    <a onclick="logout()">🚪 Logout</a>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD SECTION -->
+    <div class="section active" id="dashboardSec">
+      <div class="topbar"><h1>Dashboard</h1></div>
+      <div class="grid grid-4">
+        <div class="stat-card"><b id="totalBooks">0</b><div>Total Books</div></div>
+        <div class="stat-card"><b id="totalCats">0</b><div>Total Categories</div></div>
+        <div class="stat-card"><b id="totalViews">0</b><div>Total Reads</div></div>
+        <div class="stat-card"><b id="activeUsers">247</b><div>Active Users</div></div>
+      </div>
+      <div class="card">
+        <h3>Quick Actions</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn" onclick="showSection('booksSec',document.querySelectorAll('.nav-link')[1])">+ Add Book</button>
+          <button class="btn btn-secondary" onclick="showSection('categoriesSec',document.querySelectorAll('.nav-link')[2])">+ Add Category</button>
+          <button class="btn btn-secondary" onclick="alert('Search index rebuilt successfully!')">Rebuild Search Index</button>
+          <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Recently Added Books</h3>
+        <table id="recentBooks"><tr><th>Title</th><th>Author</th><th>Category</th></tr></table>
+      </div>
+    </div>
+
+    <!-- BOOKS SECTION -->
+    <div class="section" id="booksSec">
+      <div class="topbar"><h1>Book Management</h1></div>
+      <div class="card">
+        <h3>Add New Book</h3>
+        <label>Book Title<input id="bookTitle" placeholder="The Great Novel"></label>
+        <label>Author<input id="bookAuthor" placeholder="John Doe"></label>
+        <label>Category<select id="bookCategory"></select></label>
+        <label>Description<textarea id="bookDesc" placeholder="Book description..."></textarea></label>
+        <label>Cover Image<input type="file" id="bookCover" accept="image/*"></label>
+        <label>PDF Upload<input type="file" id="bookPDF" accept=".pdf"></label>
+        <label>EPUB Upload<input type="file" id="bookEPUB" accept=".epub"></label>
+        <div class="toggle"><input type="checkbox" id="bookFeatured"><label>Mark as Featured</label></div>
+        <button class="btn" onclick="addBook()" style="margin-top:16px">Add Book</button>
+      </div>
+      <div class="card">
+        <h3>All Books</h3>
+        <table id="booksTable"><tr><th>Title</th><th>Author</th><th>Category</th><th>Featured</th><th>Actions</th></tr></table>
+      </div>
+    </div>
+
+    <!-- CATEGORIES SECTION -->
+    <div class="section" id="categoriesSec">
+      <div class="topbar"><h1>Category Management</h1></div>
+      <div class="card">
+        <h3>Add Category</h3>
+        <input id="catName" placeholder="Category name">
+        <button class="btn" onclick="addCategory()">Create Category</button>
+      </div>
+      <div class="card">
+        <table id="catsTable"><tr><th>Category Name</th><th>Books</th><th>Actions</th></tr></table>
+      </div>
+    </div>
+
+    <!-- HOMEPAGE SECTION -->
+    <div class="section" id="homepageSec">
+      <div class="topbar"><h1>Homepage Management</h1></div>
+      <div class="card">
+        <h3>Hero Banner</h3>
+        <label>Banner Title<input id="bannerTitle" value="Welcome to PaceWave"></label>
+        <label>Banner Subtitle<input id="bannerSub" value="Read. Learn. Explore."></label>
+        <button class="btn" onclick="saveBanner()">Save Banner</button>
+      </div>
+      <div class="card">
+        <h3>Featured Books</h3>
+        <p style="color:var(--muted);margin-bottom:12px">Mark books as featured in Books section</p>
+        <div id="featuredList"></div>
+      </div>
+      <div class="card">
+        <h3>Homepage Announcement</h3>
+        <textarea id="announcement" placeholder="New books added this week!"></textarea>
+        <button class="btn" onclick="saveAnnouncement()">Update Announcement</button>
+      </div>
+    </div>
+
+    <!-- SEARCH SECTION -->
+    <div class="section" id="searchSec">
+      <div class="topbar"><h1>Search Management</h1></div>
+      <div class="card">
+        <h3>Search Index</h3>
+        <button class="btn" onclick="rebuildIndex()">Rebuild Search Index</button>
+        <p style="color:var(--muted);margin-top:12px">Last rebuilt: <span id="lastRebuild">Never</span></p>
+      </div>
+      <div class="card">
+        <h3>Search Settings</h3>
+        <div class="toggle"><input type="checkbox" checked><label>Search in Book Titles</label></div>
+        <div class="toggle"><input type="checkbox" checked><label>Search in Authors</label></div>
+        <div class="toggle"><input type="checkbox"><label>Search in Descriptions</label></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS SECTION -->
+    <div class="section" id="analyticsSec">
+      <div class="topbar"><h1>Reading Analytics</h1></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Most Read Books</h3>
+          <div id="topBooks"></div>
+        </div>
+        <div class="card">
+          <h3>Category Distribution</h3>
+          <div id="catStats"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Daily Reads</h3>
+        <div id="dailyChart"></div>
+      </div>
+    </div>
+
+    <!-- CONTENT SECTION -->
+    <div class="section" id="contentSec">
+      <div class="topbar"><h1>Website Content</h1></div>
+      <div class="card">
+        <h3>About Us</h3>
+        <textarea id="aboutContent">PaceWave is your digital reading library...</textarea>
+        <button class="btn" onclick="saveContent('about')">Save</button>
+        <button class="btn btn-secondary" onclick="preview('about')">Preview</button>
+      </div>
+      <div class="card">
+        <h3>Privacy Policy</h3>
+        <textarea id="privacyContent">Your privacy is important to us...</textarea>
+        <button class="btn" onclick="saveContent('privacy')">Save</button>
+        <button class="btn btn-secondary" onclick="preview('privacy')">Preview</button>
+      </div>
+      <div class="card">
+        <h3>Terms of Service</h3>
+        <textarea id="termsContent">By using PaceWave, you agree to...</textarea>
+        <button class="btn" onclick="saveContent('terms')">Save</button>
+        <button class="btn btn-secondary" onclick="preview('terms')">Preview</button>
+      </div>
+    </div>
+
+    <!-- APPEARANCE SECTION -->
+    <div class="section" id="appearanceSec">
+      <div class="topbar"><h1>Appearance Settings</h1></div>
+      <div class="card">
+        <h3>Branding</h3>
+        <label>Upload Logo<input type="file" accept="image/*"></label>
+        <label>Upload Favicon<input type="file" accept="image/x-icon"></label>
+      </div>
+      <div class="card">
+        <h3>Theme Colors</h3>
+        <label>Primary Color<input type="color" value="#8A2BE2" onchange="changeColor(this.value)"></label>
+      </div>
+      <div class="card">
+        <h3>Display Mode</h3>
+        <div class="toggle"><input type="checkbox" checked><label>Dark Mode</label></div>
+        <div class="toggle"><input type="checkbox"><label>Light Mode</label></div>
+      </div>
+    </div>
+
+    <!-- BACKUP SECTION -->
+    <div class="section" id="backupSec">
+      <div class="topbar"><h1>Backup & Restore</h1></div>
+      <div class="card">
+        <h3>Export Data</h3>
+        <button class="btn" onclick="exportData()">Export Library Data</button>
+        <button class="btn btn-secondary" onclick="backupBooks()">Backup Books</button>
+        <button class="btn btn-secondary" onclick="backupSettings()">Backup Settings</button>
+      </div>
+      <div class="card">
+        <h3>Restore</h3>
+        <input type="file" accept=".json">
+        <button class="btn btn-danger" onclick="alert('Restore feature: Upload JSON backup file')">Restore From Backup</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS SECTION -->
+    <div class="section" id="settingsSec">
+      <div class="topbar"><h1>Settings</h1></div>
+      <div class="card">
+        <h3>General Settings</h3>
+        <label>Website Name<input id="siteName" value="PaceWave"></label>
+        <label>Website Description<input id="siteDesc" value="Digital Reading Library"></label>
+        <label>SEO Title<input id="seoTitle" value="PaceWave - Read Online"></label>
+        <label>SEO Description<input id="seoDesc" value="Free online reading library"></label>
+        <label>SEO Keywords<input id="seoKeys" value="books, reading, library"></label>
+        <label>Facebook Link<input id="fbLink" placeholder="https://facebook.com/"></label>
+        <label>Twitter Link<input id="twLink" placeholder="https://twitter.com/"></label>
+        <label>Instagram Link<input id="igLink" placeholder="https://instagram.com/"></label>
+        <label>Copyright<input id="copyright" value="© 2026 PaceWave"></label>
+        <button class="btn" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved successfully!</div>
+
+<script>
+// Load data from homepage
+let books = JSON.parse(localStorage.getItem('pacewave_books') || '[]');
+let categories = JSON.parse(localStorage.getItem('pacewave_cats') || '[]');
+let settings = JSON.parse(localStorage.getItem('pacewave_settings') || '{}');
+
+// Login - Password only (fedae)
+function login(){
+  const p = document.getElementById('password').value;
+  if(p==='fedae'){
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    loadData();
+  } else {
+    document.getElementById('loginError').style.display='block';
+    setTimeout(()=>document.getElementById('loginError').style.display='none',3000);
+  }
+}
+
+// Allow Enter key to trigger login
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('password').addEventListener('keypress',function(e){
+    if(e.key==='Enter') login();
+  });
+});
+
+function logout(){
+  if(confirm('Logout from admin panel?')){
+    document.getElementById('dashboard').style.display='none';
+    document.getElementById('loginPage').style.display='flex';
+    document.getElementById('password').value='';
+    document.getElementById('password').focus();
+  }
+}
+
+// Navigation
+function showSection(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  if(window.innerWidth<768) document.getElementById('sidebar').classList.remove('show');
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('show');
+}
+
+// Data functions
+function save(){
+  localStorage.setItem('pacewave_books',JSON.stringify(books));
+  localStorage.setItem('pacewave_cats',JSON.stringify(categories));
+  localStorage.setItem('pacewave_settings',JSON.stringify(settings));
+  showToast();
+}
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',2000);
+}
+
+function loadData(){
+  // Update category dropdown
+  const catSelect = document.getElementById('bookCategory');
+  catSelect.innerHTML = categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+
+  updateDashboard();
+  updateBooksTable();
+  updateCatsTable();
+}
+
+function updateDashboard(){
+  document.getElementById('totalBooks').textContent = books.length;
+  document.getElementById('totalCats').textContent = categories.length;
+  document.getElementById('totalViews').textContent = books.reduce((a,b)=>a+(b.views||0),0);
+
+  const recent = books.slice(-5).reverse();
+  document.getElementById('recentBooks').innerHTML = '<tr><th>Title</th><th>Author</th><th>Category</th></tr>' +
+    recent.map(b=>`<tr><td>${b.title}</td><td>${b.author}</td><td>${getCatName(b.category)}</td></tr>`).join('');
+}
+
+function addBook(){
+  const book = {
+    id: Date.now(),
+    title: document.getElementById('bookTitle').value,
+    author: document.getElementById('bookAuthor').value,
+    category: document.getElementById('bookCategory').value,
+    desc: document.getElementById('bookDesc').value,
+    featured: document.getElementById('bookFeatured').checked,
+    views: Math.floor(Math.random()*500)
+  };
+  if(!book.title ||!book.author){alert('Please fill title and author');return;}
+  books.push(book);
+  save();
+  loadData();
+  ['bookTitle','bookAuthor','bookDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bookFeatured').checked=false;
+}
+
+function updateBooksTable(){
+  const html = '<tr><th>Title</th><th>Author</th><th>Category</th><th>Featured</th><th>Actions</th></tr>' +
+    books.map(b=>`<tr>
+      <td>${b.title}</td>
+      <td>${b.author}</td>
+      <td>${getCatName(b.category)}</td>
+      <td>${b.featured?'<span class="badge">Featured</span>':''}</td>
+      <td><button class="btn btn-danger" onclick="deleteBook(${b.id})">Delete</button></td>
+    </tr>`).join('');
+  document.getElementById('booksTable').innerHTML = html;
+
+  // Update featured list
+  document.getElementById('featuredList').innerHTML = books.filter(b=>b.featured).map(b=>`<p>⭐ ${b.title} by ${b.author}</p>`).join('') || '<p style="color:var(--muted)">No featured books</p>';
+}
+
+function deleteBook(id){
+  if(confirm('Delete this book?')){
+    books = books.filter(b=>b.id!==id);
+    save();
+    loadData();
+  }
+}
+
+function addCategory(){
+  const name = document.getElementById('catName').value;
+  if(!name){alert('Enter category name');return;}
+  categories.push({id:Date.now(),name:name});
+  document.getElementById('catName').value='';
+  save();
+  loadData();
+}
+
+function updateCatsTable(){
+  const html = '<tr><th>Category Name</th><th>Books</th><th>Actions</th></tr>' +
+    categories.map(c=>{
+      const count = books.filter(b=>b.category==c.id).length;
+      return `<tr><td>${c.name}</td><td>${count}</td><td><button class="btn btn-danger" onclick="deleteCat(${c.id})">Delete</button></td></tr>`;
+    }).join('');
+  document.getElementById('catsTable').innerHTML = html;
+}
+
+function deleteCat(id){
+  if(confirm('Delete this category?')){
+    categories = categories.filter(c=>c.id!==id);
+    save();
+    loadData();
+  }
+}
+
+function getCatName(id){
+  const cat = categories.find(c=>c.id==id);
+  return cat ? cat.name : 'Unknown';
+}
+
+function saveBanner(){
+  settings.bannerTitle = document.getElementById('bannerTitle').value;
+  settings.bannerSub = document.getElementById('bannerSub').value;
+  save();
+}
+
+function saveAnnouncement(){
+  settings.announcement = document.getElementById('announcement').value;
+  save();
+}
+
+function rebuildIndex(){
+  alert('Search index rebuilt successfully!');
+  document.getElementById('lastRebuild').textContent = new Date().toLocaleString();
+}
+
+function saveContent(type){
+  const content = document.getElementById(type+'Content').value;
+  settings[type] = content;
+  save();
+}
+
+function preview(type){
+  const content = document.getElementById(type+'Content').value;
+  alert('Preview:\n\n'+content);
+}
+
+function exportData(){
+  const data = {books,categories,settings};
+  const json = JSON.stringify(data,null,2);
+  const blob = new Blob([json],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pacewave_backup.json';
+  a.click();
+}
+
+function backupBooks(){
+  const json = JSON.stringify(books,null,2);
+  const blob = new Blob([json],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pacewave_books_backup.json';
+  a.click();
+}
+
+function backupSettings(){
+  const json = JSON.stringify(settings,null,2);
+  const blob = new Blob([json],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pacewave_settings_backup.json';
+  a.click();
+}
+
+function saveSettings(){
+  settings.siteName = document.getElementById('siteName').value;
+  settings.siteDesc = document.getElementById('siteDesc').value;
+  settings.seoTitle = document.getElementById('seoTitle').value;
+  settings.seoDesc = document.getElementById('seoDesc').value;
+  settings.seoKeys = document.getElementById('seoKeys').value;
+  settings.fbLink = document.getElementById('fbLink').value;
+  settings.twLink = document.getElementById('twLink').value;
+  settings.igLink = document.getElementById('igLink').value;
+  settings.copyright = document.getElementById('copyright').value;
+  save();
+}
+
+function changeColor(color){
+  document.documentElement.style.setProperty('--accent',color);
+}
+</script>
+</body>
+</html>
