@@ -178,7 +178,7 @@ footer a:hover{color:var(--text)}
     <nav class="nav-links" id="navLinks">
       <a href="#home">Home</a>
       <a href="#" onclick="openLibrary()">My Library</a>
-      <a href="#categories">Categories</a>
+      <button class="btn" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
     </nav>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="btn" onclick="showAllBooks()">Read Now</button>
@@ -256,10 +256,7 @@ footer a:hover{color:var(--text)}
       <a href="privacy.html">Privacy Policy</a>
       <a href="terms.html">Terms & Conditions</a>
     </div>
-    <div>
-      <h4>Stay Updated</h4>
-      <input type="email" placeholder="Your email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:var(--bg-elev);color:var(--text);width:100%;margin-top:8px">
-    </div>
+    <!-- "Stay Updated" block removed per request -->
   </div>
   <p style="text-align:center;color:var(--muted);margin-top:30px">© 2026 PaceWave. All rights reserved.<button class="hidden-footer-btn" onclick="window.location.href='admin.html'">▫️</button></p>
 </footer>
@@ -269,7 +266,7 @@ footer a:hover{color:var(--text)}
 <script>
 // Shared book data - used by both index.html and reader.html
 const books = [
-  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not rise to the level of your goals. You fall to the level of your systems. ".repeat(200)},
+  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not ri..."},
   {id:2,title:"Project Hail Mary",author:"Andy Weir",cat:"Science",rating:4.9,cover:"https://picsum.photos/seed/a2/300/400",content:"Space exploration meets survival. ".repeat(200)},
   {id:3,title:"The Silent Patient",author:"Alex Michaelides",cat:"Mystery",rating:4.6,cover:"https://picsum.photos/seed/a3/300/400",content:"A psychological thriller. ".repeat(200)},
   {id:4,title:"Deep Work",author:"Cal Newport",cat:"Business",rating:4.7,cover:"https://picsum.photos/seed/a4/300/400",content:"Focus in a distracted world. ".repeat(200)},
