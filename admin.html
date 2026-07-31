@@ -403,10 +403,22 @@ function saveAnnouncement(){
 
 // Other stubs
 function rebuildIndex(){document.getElementById('lastRebuild').textContent=new Date().toLocaleString();showToast();}
-function exportData(){const data={books,categories,settings};const blob=new Blob([JSON.stringify(data)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='pacewave_backup.json';a.click();}
+function exportData(){
+  const data = {books,categories,settings};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pacewave_backup_${new Date().toISOString()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast();
+}
 function backupBooks(){alert('Books backup exported');}
 function saveContent(k){settings[k]=document.getElementById(k+'Content').value;save();}
-function changeColor(v){document.documentElement.style.setProperty('--accent',v);}
+function changeColor(v){document.documentElement.style.setProperty('--accent',v);} 
 </script>
 </body>
 </html>
