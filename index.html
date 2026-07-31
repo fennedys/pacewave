@@ -52,6 +52,8 @@ body{
   box-shadow: var(--shadow);
 }
 .btn:hover{transform: translateY(-2px) scale(1.02)}
+/* compact button used for smaller nav buttons */
+.btn-compact{padding:10px 14px;font-size:0.95rem}
 .glass{
   background: var(--glass);
   backdrop-filter: blur(14px) saturate(160%);
@@ -88,6 +90,9 @@ header{
   background:var(--bg-elev);color:var(--text);outline:none;font-size:1rem
 }
 .search input:focus{border-color:var(--accent)}
+.search .enter-btn{
+  padding:10px 12px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;cursor:pointer;font-weight:600;box-shadow:var(--shadow);
+}
 .floating-books{
   position:absolute;inset:0;pointer-events:none;z-index:-1
 }
@@ -163,6 +168,7 @@ footer a:hover{color:var(--text)}
   .menu-toggle{display:block}
   .card{min-width:160px}
   .card img{height:220px}
+  .search{max-width:100%}
 }
 
 /* Fade in */
@@ -178,7 +184,8 @@ footer a:hover{color:var(--text)}
     <nav class="nav-links" id="navLinks">
       <a href="#home">Home</a>
       <a href="#" onclick="openLibrary()">My Library</a>
-      <button class="btn" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
+      <!-- make Categories a compact button so it matches Read Now visually on smaller navs -->
+      <button class="btn btn-compact" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
     </nav>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="btn" onclick="showAllBooks()">Read Now</button>
@@ -196,7 +203,8 @@ footer a:hover{color:var(--text)}
       <h1>Read at your own Pace</h1>
       <p>Discover thousands of premium books. Clean reading, zero distractions, full control.</p>
       <div class="search glass">
-        <input type="text" id="searchInput" placeholder="Search by title, author, or category..." oninput="liveSearch(this.value)">
+        <input type="text" id="searchInput" placeholder="Search by title, author, or category..." oninput="liveSearch(this.value)" onkeydown="if(event.key==='Enter'){searchFromInput()}">
+        <button class="enter-btn" onclick="searchFromInput()" aria-label="Search">Enter</button>
       </div>
     </div>
   </section>
@@ -258,7 +266,7 @@ footer a:hover{color:var(--text)}
     </div>
     <!-- "Stay Updated" block removed per request -->
   </div>
-  <p style="text-align:center;color:var(--muted);margin-top:30px">© 2026 PaceWave. All rights reserved.<button class="hidden-footer-btn" onclick="window.location.href='admin.html'">▫️</button></p>
+  <p style="text-align:center;color:var(--muted);margin-top:30px">© 2026 PaceWave. All rights reserved.<button class="hidden-footer-btn" onclick="window.location.href='admin.html'">▫️</button></p[...]
 </footer>
 
 <button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
@@ -266,7 +274,7 @@ footer a:hover{color:var(--text)}
 <script>
 // Shared book data - used by both index.html and reader.html
 const books = [
-  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not ri..."},
+  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not ri[...]"},
   {id:2,title:"Project Hail Mary",author:"Andy Weir",cat:"Science",rating:4.9,cover:"https://picsum.photos/seed/a2/300/400",content:"Space exploration meets survival. ".repeat(200)},
   {id:3,title:"The Silent Patient",author:"Alex Michaelides",cat:"Mystery",rating:4.6,cover:"https://picsum.photos/seed/a3/300/400",content:"A psychological thriller. ".repeat(200)},
   {id:4,title:"Deep Work",author:"Cal Newport",cat:"Business",rating:4.7,cover:"https://picsum.photos/seed/a4/300/400",content:"Focus in a distracted world. ".repeat(200)},
@@ -390,6 +398,11 @@ function liveSearch(q){
   document.getElementById('booksView').style.display='block';
   document.getElementById('booksTitle').innerText = 'Search Results';
   document.getElementById('booksGrid').innerHTML = res.map(bookCard).join('');
+}
+
+function searchFromInput(){
+  const q = document.getElementById('searchInput').value;
+  liveSearch(q);
 }
 
 function openReader(bookId){
