@@ -68,7 +68,6 @@ label{font-size:0.9rem;color:var(--muted);margin-top:12px;display:block}
     <a class="nav-link" onclick="showSection('searchSec',this)">🔍 Search</a>
     <a class="nav-link" onclick="showSection('analyticsSec',this)">📈 Analytics</a>
     <a class="nav-link" onclick="showSection('contentSec',this)">📝 Content</a>
-    <a class="nav-link" onclick="showSection('appearanceSec',this)">🎨 Appearance</a>
     <a class="nav-link" onclick="showSection('backupSec',this)">💾 Backup</a>
   </div>
 
@@ -80,7 +79,7 @@ label{font-size:0.9rem;color:var(--muted);margin-top:12px;display:block}
         <div class="stat-card"><b id="totalBooks">0</b><div>Total Books</div></div>
         <div class="stat-card"><b id="totalCats">0</b><div>Total Categories</div></div>
         <div class="stat-card"><b id="totalViews">0</b><div>Total Reads</div></div>
-        <div class="stat-card"><b id="activeUsers">247</b><div>Active Users</div></div>
+        <div class="stat-card"><b id="activeUsers">0</b><div>Active Users</div></div>
       </div>
       <div class="card">
         <h3>Quick Actions</h3>
@@ -209,24 +208,6 @@ label{font-size:0.9rem;color:var(--muted);margin-top:12px;display:block}
       </div>
     </div>
 
-    <!-- APPEARANCE SECTION -->
-    <div class="section" id="appearanceSec">
-      <div class="topbar"><h1>Appearance Settings</h1></div>
-      <div class="card">
-        <h3>Branding</h3>
-        <label>Upload Logo<input type="file" accept="image/*"></label>
-        <label>Upload Favicon<input type="file" accept="image/x-icon"></label>
-      </div>
-      <div class="card">
-        <h3>Theme Colors</h3>
-        <label>Primary Color<input type="color" value="#8A2BE2" onchange="changeColor(this.value)"></label>
-      </div>
-      <div class="card">
-        <h3>Display Mode</h3>
-        <div class="toggle"><input type="checkbox" checked><label>Dark Mode</label></div>
-      </div>
-    </div>
-
     <!-- BACKUP SECTION -->
     <div class="section" id="backupSec">
       <div class="topbar"><h1>Backup & Restore</h1></div>
@@ -301,6 +282,7 @@ function updateDashboard(){
   document.getElementById('totalBooks').textContent = books.length;
   document.getElementById('totalCats').textContent = categories.length;
   document.getElementById('totalViews').textContent = books.reduce((a,b)=>a+(b.views||0),0);
+  document.getElementById('activeUsers').textContent = settings.activeUsers || 0;
   const recent = books.slice(-5).reverse();
   document.getElementById('recentBooks').innerHTML = '<tr><th>Title</th><th>Author</th><th>Category</th></tr>' +
     recent.map(b=>`<tr><td>${b.title}</td><td>${b.author}</td><td>${getCatName(b.category)}</td></tr>`).join('');
