@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Reader</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0f; --card:#12141b; --text:#eef2ff; --muted:#94a3b8; --accent:#8A2BE2;
+  --glass:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.1);
+}
+:root.light{
+  --bg: #f7f9fc; --card: #ffffff; --text: #101418; --muted: #5b6573;
+  --glass: rgba(0,0,0,0.04); --border: rgba(0,0,0,0.1);
+}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);transition:background .4s,color .4s}
+.topbar{position:sticky;top:0;background:var(--glass);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:100}
+.brand{font-family:'Playfair Display',serif;font-size:1.2rem;color:#a78bfa}
+.wrap{max-width:800px;margin:40px auto;padding:0 20px}
+.reader{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:40px;line-height:1.9;font-size:18px;min-height:60vh
+}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.btn{padding:8px 12px;border:1px solid var(--border);background:var(--glass);border-radius:10px;color:var(--text);cursor:pointer;transition:.2s}
+.btn:hover{background:rgba(255,255,255,0.12)}
+select,input{padding:8px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:8px}
+.progress{height:4px;background:var(--border);border-radius:2px;margin-top:10px}
+.progress > div{height:100%;width:0;background:#8A2BE2;border-radius:2px;transition:width.2s}
+.reader-header{margin-bottom:30px;border-bottom:1px solid var(--border);padding-bottom:20px}
+.reader-header h2{margin:0;font-family:'Playfair Display',serif;font-size:1.8rem}
+.reader-header p{margin:5px 0 0;color:var(--muted);font-size:.95rem}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PaceWave Reader</div>
+  <div style="display:flex;gap:10px">
+    <button class="btn" onclick="toggleTheme()">🌓 Theme</button>
+    <button class="btn" onclick="goHome()">← Back to Library</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="reader-header">
+    <h2 id="chapterTitle">Loading...</h2>
+    <p id="chapterAuthor"></p>
+  </div>
+
+  <div class="controls">
+    <!-- Font selection -->
+    <select id="fontSelect" onchange="changeFont()">
+      <option value="Inter">Inter</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Merriweather">Merriweather</option>
+    </select>
+
+    <!-- Font size -->
+    <input type="range" id="sizeRange" min="14" max="26" value="18" oninput="changeSize(this.value)">
+    <span id="sizeDisplay" style="padding:8px;color:var(--muted)">18px</span>
+
+    <!-- Search box -->
+    <input type="text" id="searchBox" placeholder="Search in chapter..." oninput="searchText(this.value)">
+  </div>
+
+  <div class="progress"><div id="progressBar"></div></div>
+
+  <article class="reader" id="content">
+    <div id="chapterText">
+      <!-- Content loads here -->
+    </div>
+  </article>
+
+  <div class="controls" style="margin-top:30px;justify-content:center">
+    <button class="btn" onclick="prevChapter()">← Previous</button>
+    <select id="chapterSelect" onchange="loadChapter(this.value)" style="flex:0.5"></select>
+    <button class="btn" onclick="nextChapter()">Next →</button>
+  </div>
+</div>
+
+<script>
+// Shared book data - same as index.html
+const books = [
+  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not rise to the level of your goals. You fall to the level of your systems. Clear and useful habits transform your behavior. Every habit starts with a cue, then a routine, then a reward. Implementation intentions are a strategy that can greatly increase your odds of success. The key to building lasting habits is making small, incremental changes. Track your habits to stay accountable. Never miss twice. Small changes can lead to remarkable results. ".repeat(20)},
+  {id:2,title:"Project Hail Mary",author:"Andy Weir",cat:"Science",rating:4.9,cover:"https://picsum.photos/seed/a2/300/400",content:"Space exploration meets survival in this thrilling adventure. A lone astronaut must rely on ingenuity and problem-solving to survive impossible odds. The story unfolds in the depths of space, where every decision matters. Technical challenges become personal battles. Humanity's future depends on one person's ability to adapt. The journey is filled with unexpected twists and discoveries. Science and humor intertwine throughout the narrative. ".repeat(20)},
+  {id:3,title:"The Silent Patient",author:"Alex Michaelides",cat:"Mystery",rating:4.6,cover:"https://picsum.photos/seed/a3/300/400",content:"A psychological thriller that keeps you guessing until the final page. A woman shoots her husband and then never speaks again. A psychotherapist becomes obsessed with uncovering her motive. Nothing is what it seems in this twisted tale. Secrets buried deep begin to surface. Each revelation changes everything you thought you knew. The truth is far more complex than anyone imagined. ".repeat(20)},
+  {id:4,title:"Deep Work",author:"Cal Newport",cat:"Business",rating:4.7,cover:"https://picsum.photos/seed/a4/300/400",content:"Focus in a distracted world is a rare and valuable skill. Deep work produces the best results and the most satisfaction. Shallow work keeps you busy but doesn't advance your goals. The ability to concentrate is becoming increasingly rare. Modern distractions fragment our attention and reduce our output. To achieve deep work, you must eliminate distractions and create focus. Build rituals and routines that support concentrated effort. ".repeat(20)},
+  {id:5,title:"Sapiens",author:"Yuval Noah Harari",cat:"History",rating:4.9,cover:"https://picsum.photos/seed/a5/300/400",content:"A brief history of humankind from the age of hunter-gatherers to the present. How did homo sapiens come to dominate the world? The cognitive revolution gave us the ability to imagine shared realities. Language allowed us to cooperate in groups larger than kinship networks. The agricultural revolution changed society fundamentally. Writing, money, and laws created complex civilizations. Science and technology accelerated human progress. ".repeat(20)},
+  {id:6,title:"Educated",author:"Tara Westover",cat:"Education",rating:4.8,cover:"https://picsum.photos/seed/a6/300/400",content:"A memoir of learning and self-discovery against all odds. Raised by survivalists in the mountains, education was forbidden. A young woman decides to educate herself and attend university. Each step is a victory against her past. Education becomes her path to freedom and independence. Family ties are tested by her pursuit of knowledge. Truth and family loyalty come into conflict. ".repeat(20)},
+  {id:7,title:"The Love Hypothesis",author:"Ali Hazelwood",cat:"Romance",rating:4.5,cover:"https://picsum.photos/seed/a7/300/400",content:"Fake dating turns into something real in this charming romance. A graduate student agrees to be a fake date for a professor. What starts as pretense becomes genuine connection. Chemistry builds as they spend more time together. Both have reasons to keep their distance but feelings get in the way. Misunderstandings threaten to derail their relationship. True love requires vulnerability and honesty. ".repeat(20)},
+  {id:8,title:"Dune",author:"Frank Herbert",cat:"Fiction",rating:4.9,cover:"https://picsum.photos/seed/a8/300/400",content:"Desert planet politics and intrigue in this epic science fiction masterpiece. Arrakis is a harsh world coveted for its valuable resources. Young Paul's family is entangled in dangerous political games. Ancient prophecies and prescient abilities shape destinies. Survival on the desert requires adaptation and cunning. Relationships between cultures clash and intertwine. Power and responsibility come with great cost. ".repeat(20)},
+];
+
+let currentBook = null;
+let currentChapter = 0;
+let fontSize = 18;
+
+// Initialize on page load
+window.onload = () => {
+  loadTheme();
+  const params = new URLSearchParams(window.location.search);
+  const bookId = parseInt(params.get('id'));
+  
+  if(bookId){
+    currentBook = books.find(b => b.id === bookId);
+    if(currentBook){
+      loadChapter(0);
+      setupChapterSelect();
+      updateProgress();
+      window.addEventListener('scroll', updateProgress);
+    } else {
+      document.getElementById('chapterText').innerText = 'Book not found. Please return to the library.';
+    }
+  } else {
+    document.getElementById('chapterText').innerText = 'No book selected. Please return to the library.';
+  }
+}
+
+function setupChapterSelect(){
+  const select = document.getElementById('chapterSelect');
+  // Create 5 chapters per book for demo
+  for(let i = 0; i < 5; i++){
+    const option = document.createElement('option');
+    option.value = i;
+    option.text = `Chapter ${i + 1}`;
+    select.appendChild(option);
+  }
+  select.value = 0;
+}
+
+function loadChapter(index){
+  currentChapter = parseInt(index);
+  if(!currentBook) return;
+  
+  document.getElementById('chapterTitle').innerText = currentBook.title;
+  document.getElementById('chapterAuthor').innerText = `by ${currentBook.author} • Chapter ${currentChapter + 1}`;
+  
+  // Divide content into chapters
+  const chapterSize = currentBook.content.length / 5;
+  const start = currentChapter * chapterSize;
+  const end = (currentChapter + 1) * chapterSize;
+  const chapterContent = currentBook.content.substring(start, end);
+  
+  document.getElementById('chapterText').innerHTML = `<p>${chapterContent}</p>`;
+  
+  // Save progress
+  const progress = JSON.parse(localStorage.getItem('reading') || '{}');
+  progress[currentBook.id] = currentChapter;
+  localStorage.setItem('reading', JSON.stringify(progress));
+  
+  // Reset scroll position
+  window.scrollTo(0, 0);
+  updateProgress();
+}
+
+function nextChapter(){
+  if(currentChapter < 4){
+    loadChapter(currentChapter + 1);
+    document.getElementById('chapterSelect').value = currentChapter;
+  }
+}
+
+function prevChapter(){
+  if(currentChapter > 0){
+    loadChapter(currentChapter - 1);
+    document.getElementById('chapterSelect').value = currentChapter;
+  }
+}
+
+function changeFont(){
+  const font = document.getElementById('fontSelect').value;
+  const family = font === 'Georgia' ? 'Georgia, serif' : font === 'Merriweather' ? 'Merriweather, serif' : 'Inter, system-ui';
+  document.getElementById('chapterText').style.fontFamily = family;
+}
+
+function changeSize(size){
+  fontSize = parseInt(size);
+  document.getElementById('chapterText').style.fontSize = fontSize + 'px';
+  document.getElementById('sizeDisplay').innerText = size + 'px';
+  
+  // Save preference
+  localStorage.setItem('fontSize', fontSize);
+}
+
+function searchText(query){
+  const text = document.getElementById('chapterText');
+  if(!query){
+    text.innerHTML = text.innerHTML.replace(/<mark>/g, '').replace(/<\/mark>/g, '');
+    return;
+  }
+  
+  const regex = new RegExp(`(${query})`, 'gi');
+  const html = text.innerHTML;
+  const cleaned = html.replace(/<mark>/g, '').replace(/<\/mark>/g, '');
+  text.innerHTML = cleaned.replace(regex, '<mark style="background:#8A2BE2;color:white;padding:2px">$1</mark>');
+}
+
+function updateProgress(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const p = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
+  document.getElementById('progressBar').style.width = p + '%';
+}
+
+function toggleTheme(){
+  document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
+}
+
+function loadTheme(){
+  if(localStorage.getItem('theme') === 'light'){
+    document.documentElement.classList.add('light');
+  }
+  const saved = parseInt(localStorage.getItem('fontSize'));
+  if(saved){
+    fontSize = saved;
+    document.getElementById('sizeRange').value = fontSize;
+    changeSize(fontSize);
+  }
+}
+
+function goHome(){
+  window.location.href = 'index.html';
+}
+</script>
+
+</body>
+</html>
