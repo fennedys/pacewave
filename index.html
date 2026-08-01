@@ -52,8 +52,6 @@ body{
   box-shadow: var(--shadow);
 }
 .btn:hover{transform: translateY(-2px) scale(1.02)}
-/* compact button used for smaller nav buttons */
-.btn-compact{padding:10px 14px;font-size:0.95rem}
 .glass{
   background: var(--glass);
   backdrop-filter: blur(14px) saturate(160%);
@@ -127,12 +125,10 @@ h2{font-family:"Playfair Display",serif;font-size:2rem;margin-bottom:24px}
 .rating{color:#fbbf24;font-size:.8rem}
 
 /* Categories */
-.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+.cat-grid{display:flex;flex-wrap:wrap;gap:16px}
 .cat-card{
-  padding:24px;text-align:center;border-radius:var(--radius);
-  background:linear-gradient(135deg,#a78bfa,#d8b4fe);color:white;cursor:pointer;transition:.3s
+  font:inherit;
 }
-.cat-card:hover{transform:translateY(-4px);background:linear-gradient(135deg,#9370db,#c695f0)}
 
 /* Reading page */
 .reader{display:none;max-width:800px;margin:40px auto;padding:40px}
@@ -153,13 +149,13 @@ footer a:hover{color:var(--text)}
   background:none;
   border:none;
   color:var(--muted);
-  font-size:0.7rem;
+  font:inherit;
   cursor:pointer;
-  padding:4px;
+  padding:0;
   transition:color .2s;
-  opacity:0.5;
 }
-.hidden-footer-btn:hover{color:var(--accent)}
+.hidden-footer-btn:hover,
+.hidden-footer-btn:focus-visible{color:var(--accent)}
 .back-top{position:fixed;right:20px;bottom:20px;padding:12px;border-radius:50%;background:var(--accent);color:white;border:0;cursor:pointer;display:none}
 
 /* Responsive */
@@ -185,8 +181,6 @@ footer a:hover{color:var(--text)}
     <nav class="nav-links" id="navLinks">
       <a href="#home">Home</a>
       <a href="#" onclick="openLibrary()">My Library</a>
-      <!-- make Categories a compact button so it matches Read Now visually on smaller navs -->
-      <button class="btn" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
     </nav>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="btn" onclick="showAllBooks()">Read Now</button>
@@ -253,7 +247,7 @@ footer a:hover{color:var(--text)}
   <div class="container footer-grid">
     <div>
       <div class="logo">PaceWave</div>
-      <p style="color:var(--muted);margin-top:10px">Premium reading, redefined.</p>
+      <p style="color:var(--muted);margin-top:10px">Premium reading, redefined<button class="hidden-footer-btn" type="button" onclick="window.location.href='admin.html'" aria-label="Open administration">.</button></p>
     </div>
     <div>
       <h4>Company</h4>
@@ -267,7 +261,7 @@ footer a:hover{color:var(--text)}
     </div>
     <!-- "Stay Updated" block removed per request -->
   </div>
-  <p style="text-align:center;color:var(--muted);margin-top:30px">© 2026 PaceWave. All rights reserved.<button class="hidden-footer-btn" onclick="window.location.href='admin.html'">▫️</button></p[...]
+  <p style="text-align:center;color:var(--muted);margin-top:30px">© 2026 PaceWave. All rights reserved.</p>
 </footer>
 
 <button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
@@ -275,7 +269,7 @@ footer a:hover{color:var(--text)}
 <script>
 // Shared book data - used by both index.html and reader.html
 const books = [
-  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do n[...]
+  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. ".repeat(200)},
   {id:2,title:"Project Hail Mary",author:"Andy Weir",cat:"Science",rating:4.9,cover:"https://picsum.photos/seed/a2/300/400",content:"Space exploration meets survival. ".repeat(200)},
   {id:3,title:"The Silent Patient",author:"Alex Michaelides",cat:"Mystery",rating:4.6,cover:"https://picsum.photos/seed/a3/300/400",content:"A psychological thriller. ".repeat(200)},
   {id:4,title:"Deep Work",author:"Cal Newport",cat:"Business",rating:4.7,cover:"https://picsum.photos/seed/a4/300/400",content:"Focus in a distracted world. ".repeat(200)},
@@ -364,9 +358,7 @@ function autoScroll(el){
 function renderCats(){
   const grid = document.getElementById('catGrid');
   grid.innerHTML = categories.map(cat=>`
-    <div class="cat-card glass fade" onclick="openCategory('${cat}')">
-      <h3>${cat}</h3>
-    </div>
+    <button class="btn cat-card fade" type="button" onclick="openCategory('${cat}')">${cat}</button>
   `).join('');
 }
 
