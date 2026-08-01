@@ -93,6 +93,7 @@ header{
 .search .enter-btn{
   padding:10px 12px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;cursor:pointer;font-weight:600;box-shadow:var(--shadow);
 }
+.search .enter-btn .icon{font-size:1.05rem;line-height:1}
 .floating-books{
   position:absolute;inset:0;pointer-events:none;z-index:-1
 }
@@ -185,7 +186,7 @@ footer a:hover{color:var(--text)}
       <a href="#home">Home</a>
       <a href="#" onclick="openLibrary()">My Library</a>
       <!-- make Categories a compact button so it matches Read Now visually on smaller navs -->
-      <button class="btn btn-compact" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
+      <button class="btn" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Categories</button>
     </nav>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="btn" onclick="showAllBooks()">Read Now</button>
@@ -204,7 +205,7 @@ footer a:hover{color:var(--text)}
       <p>Discover thousands of premium books. Clean reading, zero distractions, full control.</p>
       <div class="search glass">
         <input type="text" id="searchInput" placeholder="Search by title, author, or category..." oninput="liveSearch(this.value)" onkeydown="if(event.key==='Enter'){searchFromInput()}">
-        <button class="enter-btn" onclick="searchFromInput()" aria-label="Search">Enter</button>
+        <button class="enter-btn" onclick="searchFromInput()" aria-label="Search" title="Search"><span class="icon" aria-hidden="true">🔎</span></button>
       </div>
     </div>
   </section>
@@ -274,7 +275,7 @@ footer a:hover{color:var(--text)}
 <script>
 // Shared book data - used by both index.html and reader.html
 const books = [
-  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do not ri[...]"},
+  {id:1,title:"Atomic Habits",author:"James Clear",cat:"Self-Help",rating:4.8,cover:"https://picsum.photos/seed/a1/300/400",content:"Habits are the compound interest of self-improvement. You do n[...]
   {id:2,title:"Project Hail Mary",author:"Andy Weir",cat:"Science",rating:4.9,cover:"https://picsum.photos/seed/a2/300/400",content:"Space exploration meets survival. ".repeat(200)},
   {id:3,title:"The Silent Patient",author:"Alex Michaelides",cat:"Mystery",rating:4.6,cover:"https://picsum.photos/seed/a3/300/400",content:"A psychological thriller. ".repeat(200)},
   {id:4,title:"Deep Work",author:"Cal Newport",cat:"Business",rating:4.7,cover:"https://picsum.photos/seed/a4/300/400",content:"Focus in a distracted world. ".repeat(200)},
