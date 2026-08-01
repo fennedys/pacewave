@@ -183,7 +183,7 @@ footer a:hover{color:var(--text)}
       <a href="#" onclick="openLibrary()">My Library</a>
     </nav>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn" onclick="showAllBooks()">Read Now</button>
+      <button class="btn" onclick="window.location.href='reader.html?id=1'">Read Now</button>
       <button onclick="toggleTheme()" style="background:none;border:0;font-size:1.3rem;cursor:pointer">🌓</button>
       <button class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('show')">☰</button>
     </div>
@@ -247,7 +247,7 @@ footer a:hover{color:var(--text)}
   <div class="container footer-grid">
     <div>
       <div class="logo">PaceWave</div>
-      <p style="color:var(--muted);margin-top:10px">Premium reading, redefined<button class="hidden-footer-btn" type="button" onclick="window.location.href='admin.html'" aria-label="Open administration">.</button></p>
+      <p style="color:var(--muted);margin-top:10px">Premium reading, redefined. <button class="hidden-footer-btn" type="button" onclick="window.location.href='admin.html'" aria-label="Open administration">Admin</button></p>
     </div>
     <div>
       <h4>Company</h4>
