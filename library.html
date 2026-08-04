@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library — PaceWave Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <nav id="site-nav" class="nav-inner"></nav>
+    </div>
+  </header>
+
+  <section class="page-banner">
+    <div class="container">
+      <h1>📚 The Library</h1>
+      <p>Search and browse every book in the PaceWave collection.</p>
+    </div>
+  </section>
+
+  <section class="container">
+    <!-- Toolbar: search + category filter -->
+    <div class="toolbar">
+      <form class="search-box" id="search-form">
+        <span>🔍</span>
+        <input type="search" id="search-input" placeholder="Search title, author or category…" aria-label="Search">
+      </form>
+      <select id="category-filter" aria-label="Filter by category">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+
+    <!-- Book grid -->
+    <div class="book-grid" id="book-grid"></div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
+  </section>
+
+  <footer class="footer" id="site-footer"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    (function () {
+      const PW = window.PW;
+      const grid = document.getElementById('book-grid');
+      const pageEl = document.getElementById('pagination');
+
+      const params = new URLSearchParams(location.search);
+      const state = {
+        q: params.get('q') || '',
+        category: params.get('category') || '',
+        featured: params.get('featured') === 'true',
+        new: params.get('new') === 'true',
+        page: 1,
+        perPage: 12,
+      };
+
+      PW.renderNav('library');
+      PW.renderFooter();
+      document.getElementById('search-input').value = state.q;
+
+      // Load category options
+      PW.api('/api/categories').then((d) => {
+        const sel = document.getElementById('category-filter');
+        d.categories.forEach((c) => {
+          const opt = document.createElement('option');
+          opt.value = c.id; opt.textContent = c.name;
+          sel.appendChild(opt);
+        });
+        if (state.category) sel.value = state.category;
+      }).catch(() => {});
+
+      // Load books
+      function load() {
+        PW.showSkeleton(grid, state.perPage);
+        const qs = new URLSearchParams({ page: state.page, per_page: state.perPage });
+        if (state.q) qs.set('search', state.q);
+        if (state.category) qs.set('category', state.category);
+        if (state.featured) qs.set('featured', 'true');
+        if (state.new) qs.set('newArrival', 'true');
+
+        PW.api('/api/books?' + qs.toString())
+          .then((d) => {
+            PW.renderBooks(grid, d.books);
+            renderPagination(d.total);
+          })
+          .catch((e) => { grid.innerHTML = '<div class="empty-state">' + PW.escapeHtml(e.message) + '</div>'; });
+      }
+
+      function renderPagination(total) {
+        pageEl.innerHTML = '';
+        const pages = Math.ceil(total / state.perPage);
+        if (pages <= 1) return;
+        const mk = (label, page, disabled) => {
+          const b = PW.el('button', 'btn btn-ghost btn-sm' + (disabled ? ' disabled' : ''));
+          b.textContent = label; b.disabled = !!disabled;
+          b.addEventListener('click', () => { state.page = page; load(); });
+          pageEl.appendChild(b);
+        };
+        mk('‹ Prev', state.page - 1, state.page <= 1);
+        const cur = PW.el('button', 'btn btn-sm');
+        cur.textContent = 'Page ' + state.page + ' of ' + pages;
+        cur.disabled = true;
+        pageEl.appendChild(cur);
+        mk('Next ›', state.page + 1, state.page >= pages);
+        // scroll to top of grid
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Search submit
+      document.getElementById('search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.q = document.getElementById('search-input').value.trim();
+        state.page = 1;
+        load();
+      });
+
+      // Category change
+      document.getElementById('category-filter').addEventListener('change', (e) => {
+        state.category = e.target.value;
+        state.page = 1;
+        load();
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>

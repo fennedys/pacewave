@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reader — PaceWave Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top toolbar -->
+  <div class="reader-topbar">
+    <div class="container reader-topbar-inner">
+      <a class="back-link" href="library.html">← Library</a>
+      <span class="book-name" id="book-name">Loading…</span>
+      <div class="reader-controls">
+        <button id="font-down" title="Decrease font size">A−</button>
+        <button id="font-up" title="Increase font size">A+</button>
+        <button id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reading progress bar -->
+  <div class="reader-progress"><div class="reader-progress-bar" id="progress-bar"></div></div>
+
+  <div class="reader-shell">
+    <!-- Chapter list sidebar -->
+    <aside class="chapter-side">
+      <h4>Chapters</h4>
+      <div id="chapter-list"></div>
+    </aside>
+
+    <!-- Reading area -->
+    <main class="reader-main">
+      <div id="reader-content"></div>
+
+      <!-- Prev / Next navigation -->
+      <div class="reader-nav" id="reader-nav"></div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    (function () {
+      const PW = window.PW;
+      const bookId = new URLSearchParams(location.search).get('book');
+
+      const state = {
+        book: null,
+        chapters: [],
+        currentNo: 1,
+        fontSize: parseInt(localStorage.getItem('pw_font_size') || '18', 10),
+        readerId: localStorage.getItem('pw_reader_id'),
+      };
+
+      // ---- Theme (light/dark) ----
+      function applyTheme() {
+        const theme = localStorage.getItem('pw_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.getElementById('theme-toggle').textContent = theme === 'dark' ? '🌙' : '☀️';
+      }
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const cur = localStorage.getItem('pw_theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem('pw_theme', cur);
+        applyTheme();
+      });
+
+      // ---- Font size ----
+      function applyFont() {
+        const val = Math.max(14, Math.min(28, state.fontSize));
+        document.documentElement.style.setProperty('--reader-size', val / 16 + 'rem');
+        document.getElementById('font-down').disabled = val <= 14;
+        document.getElementById('font-up').disabled = val >= 28;
+        localStorage.setItem('pw_font_size', String(val));
+      }
+      document.getElementById('font-down').addEventListener('click', () => { state.fontSize -= 1; applyFont(); });
+      document.getElementById('font-up').addEventListener('click', () => { state.fontSize += 1; applyFont(); });
+
+      // Assign a persistent anonymous reader id for progress tracking.
+      if (!state.readerId) {
+        state.readerId = 'reader_' + Math.random().toString(36).slice(2, 12);
+        localStorage.setItem('pw_reader_id', state.readerId);
+      }
+
+      if (!bookId) {
+        document.getElementById('reader-content').innerHTML =
+          '<div class="empty-state"><p>No book selected. <a class="btn" href="library.html">Browse the library</a></p></div>';
+        return;
+      }
+
+      // ---- Load book + chapters ----
+      async function init() {
+        try {
+          const { book } = await PW.api('/api/books/' + bookId);
+          state.book = book;
+          state.chapters = book.chapters || [];
+          if (state.chapters.length === 0) {
+            throw new Error('This book has no chapters yet.');
+          }
+          document.getElementById('book-name').textContent = book.title;
+
+          // Resume progress if saved.
+          const { progress } = await PW.api('/api/progress/' + bookId + '?reader_id=' + state.readerId);
+          state.currentNo = progress && progress.chapter_id
+            ? (state.chapters.find((c) => c.id === progress.chapter_id)?.chapter_no || 1)
+            : 1;
+
+          renderChapterList();
+          loadChapter(state.currentNo);
+        } catch (e) {
+          document.getElementById('reader-content').innerHTML =
+            '<div class="empty-state">' + PW.escapeHtml(e.message) + '</div>';
+        }
+      }
+
+      function renderChapterList() {
+        const list = document.getElementById('chapter-list');
+        list.innerHTML = '';
+        state.chapters.forEach((c) => {
+          const a = PW.el('a', c.chapter_no === state.currentNo ? 'active' : '');
+          a.textContent = (c.chapter_no + '. ' + c.title).slice(0, 40);
+          a.title = c.title;
+          a.href = 'reader.html?book=' + bookId + '&chapter=' + c.chapter_no;
+          list.appendChild(a);
+        });
+      }
+
+      // ---- Load a specific chapter ----
+      async function loadChapter(no) {
+        state.currentNo = no;
+        renderChapterList();
+        document.getElementById('reader-content').innerHTML = '<div class="empty-state">Loading chapter…</div>';
+
+        const { chapter, total_chapters, prev, next } =
+          await PW.api('/api/books/' + bookId + '/chapters/' + no);
+
+        const content = document.getElementById('reader-content');
+        content.innerHTML =
+          '<h1 class="chapter-title">' + PW.escapeHtml(chapter.title) + '</h1>' +
+          '<p class="book-title-sub">' + PW.escapeHtml(state.book.title) + ' · by ' +
+          PW.escapeHtml(state.book.author) + '</p>' +
+          '<div class="reader-content">' +
+          chapter.content.split('\n\n').map((p) => '<p>' + PW.escapeHtml(p) + '</p>').join('') +
+          '</div>';
+
+        // Prev/next navigation
+        const nav = document.getElementById('reader-nav');
+        nav.innerHTML = '';
+        if (prev) {
+          const b = PW.el('a', 'btn btn-outline'); b.href = 'reader.html?book=' + bookId + '&chapter=' + prev.chapter_no;
+          b.innerHTML = '← ' + PW.escapeHtml(prev.title).slice(0, 30);
+          nav.appendChild(b);
+        }
+        if (next) {
+          const b = PW.el('a', 'btn'); b.href = 'reader.html?book=' + bookId + '&chapter=' + next.chapter_no;
+          b.innerHTML = PW.escapeHtml(next.title).slice(0, 30) + ' →';
+          nav.appendChild(b);
+        }
+
+        // Update progress bar + save progress.
+        const pct = Math.round(((no - 1) / Math.max(total_chapters - 1, 1)) * 100);
+        document.getElementById('progress-bar').style.width = pct + '%';
+        PW.api('/api/progress/' + bookId, {
+          method: 'PUT',
+          body: { reader_id: state.readerId, chapter_id: chapter.id, progress_pct: pct },
+        }).catch(() => {});
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Respect ?chapter= in URL
+      const ch = new URLSearchParams(location.search).get('chapter');
+      init().then(() => {
+        if (ch) loadChapter(Number(ch));
+      });
+
+      applyTheme();
+      applyFont();
+    })();
+  </script>
+</body>
+</html>

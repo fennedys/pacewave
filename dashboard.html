@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — PaceWave Library Admin</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">⌘</span><span>PaceWave Admin</span></div>
+      <a class="side-link active" data-tab="overview" href="#overview">📊 Overview</a>
+      <a class="side-link" data-tab="books" href="#books">📚 Books</a>
+      <a class="side-link" data-tab="categories" href="#categories">🗂️ Categories</a>
+      <a class="side-link" data-tab="featured" href="#featured">⭐ Featured</a>
+      <a class="side-link" data-tab="newarrivals" href="#newarrivals">🆕 New Arrivals</a>
+      <button class="side-link logout" id="logout-btn">🚪 Logout</button>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="topbar">
+        <h1 id="page-title">Overview</h1>
+        <span class="user" id="user-label"></span>
+      </div>
+
+      <!-- ============ OVERVIEW TAB ============ -->
+      <section id="tab-overview">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="num">—</div><div class="lbl">Total Books</div></div>
+          <div class="stat-card"><div class="num">—</div><div class="lbl">Categories</div></div>
+          <div class="stat-card"><div class="num">—</div><div class="lbl">Readers</div></div>
+          <div class="stat-card"><div class="num">—</div><div class="lbl">Total Views</div></div>
+        </div>
+        <div class="card">
+          <h3>🕒 Recently Added Books</h3>
+          <div class="table-wrap">
+            <table id="recent-table">
+              <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Category</th><th>Views</th><th>Added</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BOOKS TAB ============ -->
+      <section id="tab-books" class="hidden">
+        <div class="toolbar">
+          <input type="search" id="book-search" placeholder="Search books…">
+          <button class="btn btn-sm" id="new-book-btn">+ New Book</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table id="books-table">
+              <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Category</th><th>Ch</th><th>Feat</th><th>New</th><th>Views</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CATEGORIES TAB ============ -->
+      <section id="tab-categories" class="hidden">
+        <div class="card">
+          <h3>Add Category</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Name</label><input id="cat-name" placeholder="e.g. Mystery"></div>
+            <div class="form-group"><label>Description</label><input id="cat-desc" placeholder="Short description"></div>
+          </div>
+          <button class="btn btn-sm" id="add-cat-btn">Add Category</button>
+        </div>
+        <div class="card">
+          <h3>All Categories</h3>
+          <div class="table-wrap"><table id="cats-table">
+            <thead><tr><th>Name</th><th>Slug</th><th>Books</th><th>Actions</th></tr></thead><tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ============ FEATURED TAB ============ -->
+      <section id="tab-featured" class="hidden">
+        <div class="card">
+          <h3>Manage Featured (homepage order)</h3>
+          <p class="sub" style="color:var(--text-muted);margin-top:0">Pick a book to add, then reorder with ▲▼.</p>
+          <div class="toolbar">
+            <select id="featured-select"></select>
+            <button class="btn btn-sm" id="add-featured-btn">Add to Featured</button>
+          </div>
+          <div class="table-wrap"><table id="featured-table">
+            <thead><tr><th>#</th><th>Title</th><th>Author</th><th>Actions</th></tr></thead><tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ============ NEW ARRIVALS TAB ============ -->
+      <section id="tab-newarrivals" class="hidden">
+        <div class="card">
+          <h3>New Arrivals</h3>
+          <p class="sub" style="color:var(--text-muted);margin-top:0">Mark books as new arrivals. Toggle off to remove from this list.</p>
+          <div class="table-wrap"><table id="newarrivals-table">
+            <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Added</th><th>Action</th></tr></thead><tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ============ BOOK MODAL (add/edit) ============ -->
+      <section id="tab-book-editor" class="hidden">
+        <button class="btn btn-sm btn-ghost" id="editor-back">← Back to Books</button>
+        <div class="card" style="margin-top:16px">
+          <h3 id="editor-title">Add New Book</h3>
+          <form id="book-form" enctype="multipart/form-data">
+            <input type="hidden" id="book-id">
+            <div class="form-row">
+              <div class="form-group"><label>Title *</label><input id="b-title" required></div>
+              <div class="form-group"><label>Author *</label><input id="b-author" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Category</label><select id="b-category"></select></div>
+              <div class="form-group"><label>Cover Image</label><input type="file" id="b-cover" accept="image/*"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="b-description" rows="3"></textarea></div>
+            <div class="checkbox-row">
+              <label><input type="checkbox" id="b-featured"> Featured</label>
+              <label><input type="checkbox" id="b-newarrival"> New Arrival</label>
+            </div>
+
+            <h3 style="margin:18px 0 10px">Chapters <button type="button" class="btn btn-sm btn-ghost" id="add-chapter-btn">+ Add Chapter</button></h3>
+            <p style="color:var(--text-muted);font-size:.85rem;margin:0 0 14px">Add unlimited chapters. Chapter content is stored as text in the database.</p>
+            <div id="chapters-container"></div>
+
+            <button class="btn" type="submit" id="save-book-btn" style="margin-top:10px">Save Book</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

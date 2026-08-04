@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search — PaceWave Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <nav id="site-nav" class="nav-inner"></nav>
+    </div>
+  </header>
+
+  <section class="page-banner">
+    <div class="container">
+      <h1>🔍 Search the Library</h1>
+      <p>Find books by title, author or category.</p>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="toolbar">
+      <form class="search-box" id="search-form">
+        <span>🔍</span>
+        <input type="search" id="search-input" placeholder="Try “space”, “Rowling” or “Fiction”…" aria-label="Search">
+        <button class="btn btn-sm" type="submit">Go</button>
+      </form>
+    </div>
+    <div class="book-grid" id="result-grid"></div>
+    <p class="empty-state" id="result-hint" style="display:none"></p>
+  </section>
+
+  <footer class="footer" id="site-footer"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    (function () {
+      const PW = window.PW;
+      PW.renderNav('search');
+      PW.renderFooter();
+      const grid = document.getElementById('result-grid');
+      const hint = document.getElementById('result-hint');
+
+      async function runSearch(q) {
+        if (!q) { grid.innerHTML = ''; hint.style.display = ''; hint.textContent = 'Type a query above to search.'; return; }
+        PW.showSkeleton(grid, 6);
+        hint.style.display = 'none';
+        try {
+          const { books } = await PW.api('/api/books/search?q=' + encodeURIComponent(q));
+          PW.renderBooks(grid, books);
+          hint.style.display = '';
+          hint.textContent = books.length ? books.length + ' result(s) for “' + q + '”' : 'No results for “' + q + '”.';
+        } catch (e) {
+          grid.innerHTML = '<div class="empty-state">' + PW.escapeHtml(e.message) + '</div>';
+        }
+      }
+
+      document.getElementById('search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        runSearch(document.getElementById('search-input').value.trim());
+      });
+
+      const q = new URLSearchParams(location.search).get('q');
+      if (q) {
+        document.getElementById('search-input').value = q;
+        runSearch(q);
+      }
+    })();
+  </script>
+</body>
+</html>

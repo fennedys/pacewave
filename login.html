@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — PaceWave Library</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <form class="auth-card" id="login-form" novalidate>
+      <span class="brand-mark" style="display:grid;width:52px;height:52px;font-size:1.4rem;border-radius:14px;margin:0 auto 14px">⌘</span>
+      <h1>Admin Login</h1>
+      <p class="sub">Sign in to manage PaceWave Library</p>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" autocomplete="email" placeholder="admin@pacewave.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required>
+      </div>
+
+      <p class="err-msg" id="error-msg"></p>
+      <button class="btn" type="submit" id="login-btn">Sign In</button>
+    </form>
+  </div>
+
+  <script src="admin.js"></script>
+  <script>
+    // Login form handler
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const err = document.getElementById('error-msg');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const data = await PW.api('/api/auth/login', {
+          method: 'POST',
+          body: { email, password },
+        });
+        // Store tokens
+        localStorage.setItem('pw_admin_token', data.access_token);
+        localStorage.setItem('pw_admin_refresh', data.refresh_token);
+        localStorage.setItem('pw_admin_user', JSON.stringify(data.admin));
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        err.textContent = error.message;
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaceWave Library — Read Books Anytime, Anywhere</title>
+  <meta name="description" content="PaceWave Library - a modern online reading platform. Browse featured books, new arrivals and categories, and read chapter by chapter.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation (populated by app.js) -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <nav id="site-nav" class="nav-inner"></nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <span class="hero-badge">✨ Your digital bookshelf, always open</span>
+      <h1>Read Books <span class="grad">Anytime, Anywhere</span></h1>
+      <p class="lead">
+        Discover a world of chapters. Browse our library, pick a book and
+        start reading instantly — no downloads, no waiting.
+      </p>
+      <div class="hero-actions">
+        <a class="btn" href="library.html">📚 Explore the Library</a>
+        <a class="btn btn-outline" href="reader.html?book=" style="display:none" id="cta-hidden"></a>
+      </div>
+      <form class="hero-search" id="hero-search" role="search">
+        <span>🔍</span>
+        <input type="search" name="q" placeholder="Search by title, author or category…" aria-label="Search books">
+        <button class="btn" type="submit">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Stats strip -->
+  <section class="container">
+    <div class="stats-strip">
+      <div class="stat"><b id="stat-books">—</b><span>Total Books</span></div>
+      <div class="stat"><b id="stat-cats">—</b><span>Categories</span></div>
+      <div class="stat"><b id="stat-readers">—</b><span>Readers</span></div>
+      <div class="stat"><b id="stat-views">—</b><span>Total Views</span></div>
+    </div>
+  </section>
+
+  <!-- Featured books -->
+  <section class="container">
+    <div class="section-head reveal">
+      <div>
+        <h2>⭐ Featured Books</h2>
+        <p class="sub">Hand-picked titles our readers love.</p>
+      </div>
+      <a class="link-all" href="library.html?featured=true">View all →</a>
+    </div>
+    <div class="carousel" id="featured-grid"></div>
+  </section>
+
+  <!-- New arrivals -->
+  <section class="container">
+    <div class="section-head reveal">
+      <div>
+        <h2>🆕 New Arrivals</h2>
+        <p class="sub">Freshly added to the shelves.</p>
+      </div>
+      <a class="link-all" href="library.html?new=true">View all →</a>
+    </div>
+    <div class="book-grid" id="new-grid"></div>
+  </section>
+
+  <!-- Categories -->
+  <section class="container">
+    <div class="section-head reveal">
+      <div>
+        <h2>🗂️ Browse Categories</h2>
+        <p class="sub">Find exactly what you're in the mood for.</p>
+      </div>
+    </div>
+    <div class="cat-grid" id="cat-grid"></div>
+  </section>
+
+  <footer class="footer" id="site-footer"></footer>
+
+  <script src="app.js"></script>
+  <script>
+    // ---- Homepage logic ----
+    (function () {
+      const PW = window.PW;
+
+      // Build navigation + footer
+      PW.renderNav('home');
+      PW.renderFooter();
+
+      // Load stats
+      Promise.all([
+        PW.api('/api/books?per_page=1'),
+        PW.api('/api/categories'),
+      ]).then(([booksRes, catRes]) => {
+        document.getElementById('stat-books').textContent =
+          booksRes.total != null ? booksRes.total : booksRes.books.length;
+        document.getElementById('stat-cats').textContent = catRes.categories.length;
+      }).catch(() => {});
+
+      // Featured carousel
+      const featGrid = document.getElementById('featured-grid');
+      PW.showSkeleton(featGrid, 6);
+      PW.api('/api/books/featured')
+        .then((d) => PW.renderBooks(featGrid, d.books || d.featured))
+        .catch((e) => { featGrid.innerHTML = '<div class="empty-state">' + PW.escapeHtml(e.message) + '</div>'; });
+
+      // New arrivals
+      const newGrid = document.getElementById('new-grid');
+      PW.showSkeleton(newGrid, 4);
+      PW.api('/api/books/new-arrivals?limit=4')
+        .then((d) => PW.renderBooks(newGrid, d.books))
+        .catch((e) => { newGrid.innerHTML = '<div class="empty-state">' + PW.escapeHtml(e.message) + '</div>'; });
+
+      // Categories
+      const catGrid = document.getElementById('cat-grid');
+      PW.api('/api/categories?with_books=true')
+        .then((d) => {
+          catGrid.innerHTML = '';
+          const icons = ['📚','📖','🔬','💼','💻','🌱','🐉','👤'];
+          d.categories.slice(0, 8).forEach((c, i) => {
+            const card = PW.el('a', 'cat-card');
+            card.href = 'library.html?category=' + encodeURIComponent(c.id);
+            card.innerHTML =
+              '<span class="cat-icon">' + (icons[i % icons.length]) + '</span>' +
+              '<h3>' + PW.escapeHtml(c.name) + '</h3>' +
+              '<p>' + (c.book_count || 0) + ' books</p>';
+            catGrid.appendChild(card);
+          });
+        })
+        .catch(() => {});
+
+      // Hero search -> library search
+      document.getElementById('hero-search').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = e.target.q.value.trim();
+        window.location.href = 'library.html?q=' + encodeURIComponent(q);
+      });
+    })();
+  </script>
+</body>
+</html>
