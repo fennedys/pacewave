@@ -7,6 +7,7 @@
 require('dotenv').config();
 
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -52,7 +53,30 @@ const authLimiter = rateLimit({
 });
 
 // ---- Static frontend (deployment: backend serves the built site) ----
-app.use(express.static(__dirname));
+// Prefer serving a dedicated `public/` directory. If it doesn't exist yet,
+// fall back to the repository root but block access to sensitive files.
+const publicDir = path.join(__dirname, 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+} else {
+  // Block access to known sensitive files and directories before serving
+  const forbiddenPatterns = [
+    '.env', '.env.example', 'server.js', 'package.json', 'package-lock.json', 'node_modules', '.git', '.github'
+  ];
+
+  app.use((req, res, next) => {
+    const p = req.path;
+    for (const pat of forbiddenPatterns) {
+      if (p === `/${pat}` || p.startsWith(`/${pat}/`) || p.includes(`/${pat}`) || p.includes(pat)) {
+        return res.status(404).end();
+      }
+    }
+    next();
+  });
+
+  // Serve the repository root as a temporary fallback (move frontend into ./public/ when ready)
+  app.use(express.static(__dirname));
+}
 
 
 // ---- API routes ----
