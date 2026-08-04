@@ -5,7 +5,7 @@
 //  - Anon key   : used for anything public / client-side.
 //  - Service key: used by the backend ONLY. It bypasses Row Level
 //    Security so the server can manage library content safely.
-// Reads from environment variables (see ../.env.example).
+// Reads from environment variables (see .env.example).
 // =====================================================================
 const { createClient } = require('@supabase/supabase-js');
 const WebSocket = require('ws');
@@ -26,8 +26,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const configured = !!(supabaseUrl && supabaseAnonKey && supabaseServiceKey);
 if (!configured) {
   console.error(
-    '\n[MISSING ENV] SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY ' +
-    'must be set. Copy backend/.env.example to backend/.env and fill it in.\n' +
+    '\n[MISSING ENV] SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY must be set.' +
+    ' Copy .env.example to .env in the project root and fill in the Supabase keys.\n' +
     '  The server started WITHOUT Supabase: static pages work, but data APIs will fail.\n'
   );
 }
